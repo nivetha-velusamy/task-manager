@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -8,10 +9,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Health and Root endpoints
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Task Manager API is running" });
+});
+
 // Connect to MongoDB
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/taskmanager";
 mongoose
-  .connect("mongodb://localhost:27017/taskmanager")
-  .then(() => console.log("MongoDB connected"))
+  .connect(MONGODB_URI)
+  .then(() => console.log("MongoDB connected successfully"))
   .catch((err) => console.log("MongoDB connection error:", err));
 
 // Define Task Schema and Model
@@ -61,15 +72,18 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
-// Update task status
+// Update task (status and/or title)
 app.patch("/tasks/:id", async (req, res) => {
-  const { status } = req.body;
+  const { title, status } = req.body;
+  const updateData = {};
+  if (title !== undefined) updateData.title = title;
+  if (status !== undefined) updateData.status = status;
 
   try {
     const updatedTask = await Task.findByIdAndUpdate(
       req.params.id,
-      { status },
-      { new: true }
+      updateData,
+      { new: true, runValidators: true }
     );
 
     if (!updatedTask) {
@@ -80,9 +94,9 @@ app.patch("/tasks/:id", async (req, res) => {
 
     res.json(updatedTask);
   } catch (err) {
-    console.error("Error updating task status:", err);
+    console.error("Error updating task:", err);
     res.status(500).json({
-      message: "Server error. Could not update task status."
+      message: "Server error. Could not update task."
     });
   }
 });
@@ -112,6 +126,10 @@ app.delete("/tasks/:id", async (req, res) => {
 // Server configuration
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
