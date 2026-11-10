@@ -123,6 +123,23 @@ app.delete("/tasks/:id", async (req, res) => {
   }
 });
 
+// Serve frontend static assets if built
+const path = require("path");
+const clientDist = path.join(__dirname, "client", "dist");
+app.use(express.static(clientDist));
+
+// SPA fallback
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/tasks") || req.path === "/health") {
+    return next();
+  }
+  const indexPath = path.join(clientDist, "index.html");
+  if (require("fs").existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  next();
+});
+
 // Server configuration
 const PORT = process.env.PORT || 5000;
 

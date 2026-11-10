@@ -1,9 +1,9 @@
-﻿services:
+services:
   - type: web
     name: task-manager-backend
     env: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
       - key: MONGODB_URI

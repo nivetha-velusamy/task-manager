@@ -4,7 +4,11 @@ import axios from "axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./App.css";
 
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
+const API_BASE_URL = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
+  : (typeof window !== "undefined" && (window.location.port === "5173" || window.location.port === "3000"))
+  ? "http://localhost:5000"
+  : "";
 
 const App = () => {
   const [tasks, setTasks] = useState([]);
