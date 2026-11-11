@@ -179,11 +179,8 @@ app.delete("/tasks/:id", async (req, res) => {
 const clientDist = path.join(__dirname, "client", "dist");
 app.use(express.static(clientDist));
 
-// SPA fallback
-app.get("*", (req, res, next) => {
-  if (req.path.startsWith("/tasks") || req.path === "/health" || req.path.startsWith("/api")) {
-    return next();
-  }
+// SPA fallback for all other routes
+app.use((req, res) => {
   const indexPath = path.join(clientDist, "index.html");
   if (require("fs").existsSync(indexPath)) {
     return res.sendFile(indexPath);
